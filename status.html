@@ -36,6 +36,10 @@ body{background:var(--bg);color:var(--ink);
 .route{font-size:12px;color:var(--dim);text-align:right;line-height:1.45}
 .route b{color:var(--ink2);font-weight:600}
 
+.nav{display:flex;gap:7px;margin-bottom:14px}
+.nav a{flex:1;text-align:center;padding:10px 6px;font-size:12.5px;font-weight:600;
+ border-radius:9px;text-decoration:none;background:var(--card);border:1px solid var(--line);color:var(--dim)}
+.nav a.on{background:var(--pri);border-color:var(--pri);color:#fff}
 .grid{display:grid;grid-template-columns:1fr;gap:14px}
 @media(min-width:840px){
   .grid{grid-template-columns:340px 1fr}
@@ -153,6 +157,10 @@ footer{margin-top:26px;padding:16px 4px;font-size:11px;color:var(--faint);line-h
   <div class="route">강나루현대 24평 → <b>마포태영 34평</b><br><span id="asof">–</span></div>
 </div>
 
+<nav class="nav">
+  <a href="index.html">격차 관측소</a>
+  <a href="status.html" class="on">자금 동원 현황</a>
+</nav>
 <div class="warnbar" id="missBar" hidden></div>
 <div class="grid">
 

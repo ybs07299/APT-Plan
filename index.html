@@ -4,437 +4,376 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0D1117">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F4F7FC">
 <title>격차 관측소</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css">
 <style>
 :root{
-  --bg:#0D1117;--panel:#161B22;--panel2:#1C232D;--line:#252D38;
-  --ink:#E6EDF3;--dim:#8B949E;--faint:#5A646F;
-  --a:#3D7EAA;      /* 강나루현대 */
-  --b:#B08CC7;      /* 마포태영 */
-  --gapc:#C8553D;   /* 격차 / 부족 */
-  --ok:#4FA88B;     /* 도달 가능 */
-  --edge:#E3B341;   /* 임계 */
+  --bg:#F4F7FC;--card:#FFFFFF;--line:#E8EDF6;--line2:#F0F4FA;
+  --ink:#152344;--ink2:#31415F;--dim:#8593AE;--faint:#A9B4C9;
+  --b1:#12327E;--b2:#2563EB;--b3:#5B9BF8;--b4:#93C0FC;--b5:#C6DDFE;
+  --gapc:#DCE4F0;--pri:#2563EB;
+  --shadow:0 1px 2px rgba(21,35,68,.04),0 6px 18px rgba(21,35,68,.05);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
 body{background:var(--bg);color:var(--ink);
-  font-family:"Pretendard Variable",Pretendard,-apple-system,system-ui,sans-serif;
-  font-size:15px;line-height:1.5;max-width:520px;margin:0 auto;
-  padding:0 16px calc(40px + env(safe-area-inset-bottom));
-  font-variant-numeric:tabular-nums}
-header{padding:26px 0 14px}
-.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--faint);text-transform:uppercase}
-.route{display:flex;align-items:baseline;gap:8px;margin-top:8px;font-size:17px;font-weight:600}
-.route .ar{color:var(--faint);font-weight:400}
-.route small{font-size:12px;color:var(--dim);font-weight:500}
+ font-family:"Pretendard Variable",Pretendard,-apple-system,system-ui,sans-serif;
+ font-size:14px;line-height:1.5;font-variant-numeric:tabular-nums;
+ padding:0 14px calc(36px + env(safe-area-inset-bottom));max-width:1040px;margin:0 auto}
 
-.hero{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px 18px}
-.hero .lbl{font-size:12px;color:var(--dim)}
-.hero .big{font-size:clamp(40px,13vw,56px);font-weight:800;letter-spacing:-.04em;line-height:1.02;margin:6px 0 4px}
-.hero .big.ok{color:var(--ok)}.hero .big.no{color:var(--gapc)}
-.hero .sub{font-size:13px;color:var(--dim)}
-.hero .sub b{color:var(--ink);font-weight:600}
+.top{display:flex;align-items:center;justify-content:space-between;padding:20px 2px 16px}
+.brand{display:flex;align-items:center;gap:9px}
+.mark{width:16px;height:16px;border-radius:5px;border:2.5px solid var(--pri)}
+.brand h1{font-size:15px;font-weight:700;letter-spacing:-.01em}
+.route{font-size:12px;color:var(--dim);text-align:right;line-height:1.45}
+.route b{color:var(--ink2);font-weight:600}
+
+.nav{display:flex;gap:7px;margin-bottom:14px}
+.nav a{flex:1;text-align:center;padding:10px 6px;font-size:12.5px;font-weight:600;
+ border-radius:9px;text-decoration:none;background:var(--card);border:1px solid var(--line);color:var(--dim)}
+.nav a.on{background:var(--pri);border-color:var(--pri);color:#fff}
+
+.grid{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:840px){.grid{grid-template-columns:340px 1fr}.span2{grid-column:1/-1}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:var(--shadow)}
+.card h2{font-size:13.5px;font-weight:700;letter-spacing:-.01em;margin-bottom:2px}
+.card .cap{font-size:11.5px;color:var(--faint);margin-bottom:14px}
+
+.kpi .lbl{font-size:12px;color:var(--dim)}
+.kpi .big{font-size:clamp(30px,8.5vw,38px);font-weight:800;letter-spacing:-.035em;
+ line-height:1.08;margin:5px 0 3px;color:var(--b1)}
+.kpi .delta{display:inline-flex;gap:4px;font-size:11.5px;font-weight:600;color:var(--pri);
+ background:#EEF4FF;border-radius:20px;padding:3px 9px;margin-top:4px}
+.mini{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);
+ border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-top:16px}
+.mini div{background:var(--card);padding:12px 13px}
+.mini .k{font-size:11px;color:var(--dim);margin-bottom:4px}
+.mini .v{font-size:17px;font-weight:700;letter-spacing:-.02em}
+
 /* 백분위 게이지 */
-.pct{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
-.pct .cap{display:flex;justify-content:space-between;font-size:11.5px;color:var(--faint);margin-bottom:6px}
-.pctbar{position:relative;height:6px;border-radius:3px;
-  background:linear-gradient(90deg,var(--ok) 0%,#7f8f6a 45%,var(--edge) 70%,var(--gapc) 100%);opacity:.8}
-.pctmark{position:absolute;top:-5px;width:2px;height:16px;background:var(--ink);border-radius:1px;transition:left .3s}
-.pcttxt{margin-top:8px;font-size:12.5px;color:var(--dim)}
-.pcttxt b{color:var(--ink)}
-
-section{margin:26px 0}
-h2{font-size:11px;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;font-weight:600;
-  padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:14px}
-h2 span{float:right;letter-spacing:0;text-transform:none;color:var(--dim);font-weight:500}
+.pct{margin-top:16px}
+.pcap{display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-bottom:6px}
+.pbar{position:relative;height:8px;border-radius:5px;
+ background:linear-gradient(90deg,var(--b5),var(--b3) 45%,var(--b2) 72%,var(--b1))}
+.pmark{position:absolute;top:-5px;width:3px;height:18px;background:var(--ink);border-radius:2px;
+ box-shadow:0 0 0 2px #fff;transition:left .3s}
+.ptxt{margin-top:10px;font-size:11.5px;color:var(--dim);line-height:1.7}
+.ptxt b{color:var(--ink2);font-weight:600}
 
 .tabs{display:flex;gap:6px;margin-bottom:12px}
-.tab{flex:1;padding:8px 4px;font-size:12.5px;font-weight:600;text-align:center;border-radius:7px;
-  background:var(--panel2);border:1px solid var(--line);color:var(--dim);cursor:pointer}
-.tab[aria-selected=true]{background:var(--panel);color:var(--ink);border-color:var(--faint)}
-.chart{width:100%;height:210px;display:block;touch-action:none}
+.tab{flex:1;padding:8px 4px;font-size:12px;font-weight:600;text-align:center;border-radius:8px;
+ background:#F3F6FC;border:1px solid var(--line);color:var(--dim);cursor:pointer}
+.tab[aria-selected=true]{background:var(--pri);border-color:var(--pri);color:#fff}
+.chart{width:100%;height:200px;display:block;touch-action:none}
 .chart text{font-size:9px;fill:var(--faint);font-family:inherit}
-.readout{display:flex;justify-content:space-between;align-items:baseline;
-  margin-top:10px;padding:11px 13px;background:var(--panel2);border-radius:8px;font-size:13px}
-.readout .ym{font-weight:700;letter-spacing:-.01em}
-.readout .rv{color:var(--dim);text-align:right;line-height:1.55;font-size:12.5px}
-.readout .rv b{color:var(--ink);font-weight:600}
-.legend{margin-top:9px;font-size:11.5px;color:var(--faint);line-height:1.7}
+.readout{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;
+ padding:11px 13px;background:#F8FAFE;border:1px solid var(--line);border-radius:9px;font-size:12.5px}
+.readout .ym{font-weight:700}
+.readout .rv{color:var(--dim);text-align:right;line-height:1.6;font-size:12px}
+.readout .rv b{color:var(--ink);font-weight:700}
+.lg{margin-top:9px;font-size:11.5px;color:var(--faint);line-height:1.7}
+.lg b{color:var(--ink2)}
 
-.field{margin-bottom:15px}
-.field label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--dim);margin-bottom:6px}
-.field label b{color:var(--ink);font-weight:600}
-input[type=number],select{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);
-  border-radius:8px;padding:10px 12px;font:inherit;font-variant-numeric:tabular-nums}
-input:focus,select:focus{outline:2px solid var(--a);outline-offset:1px;border-color:transparent}
-input[type=range]{width:100%;-webkit-appearance:none;background:transparent;height:26px}
-input[type=range]::-webkit-slider-runnable-track{height:4px;background:var(--line);border-radius:2px}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;
-  background:var(--ink);margin-top:-9px;border:3px solid var(--bg);box-shadow:0 0 0 1px var(--line)}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-
-.bar{margin-bottom:11px}
-.bar .row{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px}
-.bar .row .k{color:var(--dim)}.bar .row .v{font-weight:600}
-.bar .track{height:7px;background:var(--panel2);border-radius:4px;overflow:hidden}
-.bar .fill{height:100%;border-radius:4px;background:#5C6B8A;transition:width .3s}
-.bar.bind .row .v{color:var(--edge)}.bar.bind .fill{background:var(--edge)}
+.fd{margin-bottom:11px}
+.fd label{display:flex;justify-content:space-between;font-size:11.5px;color:var(--dim);margin-bottom:5px}
+.fd label b{color:var(--ink2);font-weight:700}
+input[type=number],select{width:100%;background:#F8FAFE;border:1px solid var(--line);color:var(--ink);
+ border-radius:8px;padding:9px 11px;font:inherit;font-weight:600;font-variant-numeric:tabular-nums}
+input:focus,select:focus{outline:2px solid rgba(37,99,235,.35);border-color:var(--pri);background:#fff}
+input.miss{border-style:dashed;border-color:#C9D6EA}
+input[type=range]{width:100%;-webkit-appearance:none;background:transparent;height:26px;padding:0}
+input[type=range]::-webkit-slider-runnable-track{height:4px;background:#DFE7F4;border-radius:2px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+ background:var(--pri);margin-top:-8px;border:3px solid #fff;box-shadow:0 1px 4px rgba(21,35,68,.25)}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
 
 table{width:100%;border-collapse:collapse;font-size:13px}
-td{padding:8px 0;border-bottom:1px solid var(--line)}
-td:last-child{text-align:right;font-weight:600}
+td{padding:9px 0;border-bottom:1px solid var(--line2);color:var(--ink2)}
+td:last-child{text-align:right;font-weight:700;color:var(--ink)}
 tr:last-child td{border-bottom:none}
 td .hint{display:block;font-size:11px;color:var(--faint);font-weight:400;margin-top:2px}
 
-.flag{background:rgba(227,179,65,.07);border:1px solid rgba(227,179,65,.28);border-radius:8px;
-  padding:13px 14px;font-size:13px;line-height:1.65;margin-top:12px}
-.flag b{color:var(--edge)}
-.empty{background:var(--panel2);border:1px dashed var(--line);border-radius:9px;padding:18px;
-  font-size:13px;color:var(--dim);line-height:1.7}
-.empty b{color:var(--ink)}
-footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);
-  font-size:11.5px;color:var(--faint);line-height:1.7}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.note{background:#F1F6FF;border:1px solid #D8E5FD;border-radius:10px;padding:13px 14px;
+ font-size:12.5px;line-height:1.7;color:var(--ink2);margin-top:10px}
+.note .tt{display:block;font-weight:700;color:var(--b1);margin-bottom:4px}
+.note b{color:var(--b1);font-weight:700}
+.warnbar{background:#FFF;border:1px solid #D8E5FD;border-left:3px solid var(--pri);border-radius:10px;
+ padding:13px 15px;margin-bottom:14px;font-size:12.5px;line-height:1.7;color:var(--ink2)}
+.warnbar .t{display:block;font-weight:700;color:var(--b1);margin-bottom:4px}
+.warnbar b{color:var(--b1)}
+footer{margin-top:26px;padding:16px 4px;font-size:11px;color:var(--faint);line-height:1.75}
 </style>
 </head>
 <body>
 
-<header>
-  <div class="eyebrow">격차 관측소</div>
-  <div class="route">강나루현대 <small>24평</small><span class="ar">→</span>마포태영 <small>34평</small></div>
-</header>
-
-<div class="hero">
-  <div class="lbl" id="hLbl">지금 격차</div>
-  <div class="big no" id="hBig">–</div>
-  <div class="sub" id="hSub">–</div>
-  <div class="pct" id="pctBox">
-    <div class="cap"><span>역대 최소</span><span>역대 최대</span></div>
-    <div class="pctbar"><div class="pctmark" id="pctMark" style="left:50%"></div></div>
-    <div class="pcttxt" id="pctTxt">–</div>
-  </div>
+<div class="top">
+  <div class="brand"><span class="mark"></span><h1>격차 관측소</h1></div>
+  <div class="route">강나루현대 24평 → <b>마포태영 34평</b><br><span id="asof">–</span></div>
 </div>
 
-<section id="secHist">
-  <h2>격차의 역사 <span id="histRange">–</span></h2>
-  <div class="tabs" role="tablist">
-    <div class="tab" role="tab" data-m="price" aria-selected="true">두 단지 가격</div>
-    <div class="tab" role="tab" data-m="gap" aria-selected="false">격차</div>
-    <div class="tab" role="tab" data-m="short" aria-selected="false">부족액</div>
-  </div>
-  <svg class="chart" id="chart" viewBox="0 0 340 210" preserveAspectRatio="none" role="img"></svg>
-  <div class="readout"><span class="ym" id="roYm">–</span><span class="rv" id="roVal">–</span></div>
-  <div class="legend" id="chartLegend">–</div>
-</section>
+<nav class="nav">
+  <a href="index.html" class="on">격차 관측소</a>
+  <a href="status.html">자금 동원 현황</a>
+</nav>
 
-<section id="secEmpty" hidden>
-  <h2>격차의 역사</h2>
-  <div class="empty">
-    아직 <b>data/series.json</b>이 없습니다.<br><br>
-    <b>collector.py</b>를 실행하면 국토부 실거래 20년치를 받아 월별 시계열을 만듭니다.
-    그때부터 이 화면에 두 단지의 격차 곡선과 부족액 백테스트가 표시됩니다.<br><br>
-    아래 시나리오 계산은 현재 시세 기준으로 지금도 동작합니다.
-  </div>
-</section>
+<div class="warnbar" id="dataBar" hidden></div>
 
-<section>
-  <h2>하락 시나리오</h2>
-  <div class="field">
-    <label for="dropA">강나루현대 하락률 <b><span id="oDA">–</span></b></label>
-    <input type="range" id="dropA" min="0" max="50" step="1" value="0">
-  </div>
-  <div class="field">
-    <label for="dropB">마포태영 하락률 <b><span id="oDB">–</span></b></label>
-    <input type="range" id="dropB" min="0" max="50" step="1" value="0">
-  </div>
-  <table id="scen"></table>
-  <div class="flag" id="scenFlag">–</div>
-</section>
+<div class="grid">
 
-<section>
-  <h2>내 조건</h2>
-  <div class="grid2">
-    <div class="field"><label for="income">연소득 <b><span id="oIncome">–</span></b></label>
-      <input type="number" id="income" value="9000" step="100" inputmode="numeric"></div>
-    <div class="field"><label for="cash">보유 현금 <b><span id="oCash">–</span></b></label>
-      <input type="number" id="cash" value="10000" step="500" inputmode="numeric"></div>
-    <div class="field"><label for="debtBal">기존 주담대 잔액 <b><span id="oDebt">–</span></b></label>
-      <input type="number" id="debtBal" value="0" step="500" inputmode="numeric"></div>
-    <div class="field"><label for="otherPay">기타대출 연 원리금 <b><span id="oOther">–</span></b></label>
-      <input type="number" id="otherPay" value="0" step="100" inputmode="numeric"></div>
+  <div class="card kpi">
+    <div class="lbl">지금 격차</div>
+    <div class="big" id="hBig">–</div>
+    <div class="delta" id="hDelta">–</div>
+    <div class="mini">
+      <div><div class="k">강나루현대</div><div class="v" id="mCur">–</div></div>
+      <div><div class="k">마포태영</div><div class="v" id="mTgt">–</div></div>
+      <div><div class="k">가격 배수</div><div class="v" id="mRatio">–</div></div>
+      <div><div class="k">역대 위치</div><div class="v" id="mPct">–</div></div>
+    </div>
+    <div class="pct" id="pctBox">
+      <div class="pcap"><span>역대 최소</span><span>역대 최대</span></div>
+      <div class="pbar"><div class="pmark" id="pMark" style="left:50%"></div></div>
+      <div class="ptxt" id="pTxt">–</div>
+    </div>
   </div>
-  <div class="field"><label for="rate">주담대 금리 <b><span id="oRate">–</span></b></label>
-    <input type="range" id="rate" min="2.5" max="7" step="0.1" value="4.3"></div>
-  <div class="field"><label for="policy">대출 규제</label>
-    <select id="policy">
-      <option value="now" selected>현행 유지 (절대한도 6/4/2억)</option>
-      <option value="ease">완화 (절대한도 폐지)</option>
-      <option value="tight">강화 (절대한도 20% 축소)</option>
-    </select></div>
-</section>
 
-<section>
-  <h2>대출 한도 <span id="loanWhen">현재가 기준</span></h2>
-  <div class="bar" id="bLtv"><div class="row"><span class="k">LTV 한도</span><span class="v" id="vLtv">–</span></div>
-    <div class="track"><div class="fill" id="fLtv"></div></div></div>
-  <div class="bar" id="bCap"><div class="row"><span class="k">수도권 절대한도</span><span class="v" id="vCap">–</span></div>
-    <div class="track"><div class="fill" id="fCap"></div></div></div>
-  <div class="bar" id="bDsr"><div class="row"><span class="k">DSR 한도</span><span class="v" id="vDsr">–</span></div>
-    <div class="track"><div class="fill" id="fDsr"></div></div></div>
-  <p class="legend" id="bindNote">–</p>
-</section>
+  <div class="card">
+    <h2>격차의 역사</h2>
+    <div class="cap" id="histRange">국토부 실거래 월별 중위값 · 4층 이상</div>
+    <div class="tabs" role="tablist">
+      <div class="tab" role="tab" data-m="price" aria-selected="true">두 단지 가격</div>
+      <div class="tab" role="tab" data-m="gap" aria-selected="false">격차</div>
+      <div class="tab" role="tab" data-m="short" aria-selected="false">부족액</div>
+    </div>
+    <svg class="chart" id="chart" viewBox="0 0 340 200" preserveAspectRatio="none" role="img"></svg>
+    <div class="readout"><span class="ym" id="roYm">–</span><span class="rv" id="roVal">–</span></div>
+    <div class="lg" id="chartLg">–</div>
+  </div>
+
+  <div class="card">
+    <h2>하락 시나리오</h2>
+    <div class="cap">두 단지가 얼마나 떨어지면 손이 닿는지</div>
+    <div class="fd"><label for="dropA">강나루현대 하락률 <b><span id="oDA">–</span></b></label>
+      <input type="range" id="dropA" min="0" max="50" step="1" value="0"></div>
+    <div class="fd"><label for="dropB">마포태영 하락률 <b><span id="oDB">–</span></b></label>
+      <input type="range" id="dropB" min="0" max="50" step="1" value="0"></div>
+    <table id="scen"></table>
+    <div class="note" id="scenNote">–</div>
+  </div>
+
+  <div class="card">
+    <h2>내 조건</h2>
+    <div class="cap">단위: 만원 · 자금 동원 현황과 같은 값을 넣으세요</div>
+    <div class="f2">
+      <div class="fd"><label for="income">부부 합산 연소득</label><input type="number" id="income" value="16000" step="100" inputmode="numeric"></div>
+      <div class="fd"><label for="cash">보유 현금</label><input type="number" id="cash" value="" placeholder="미입력" step="500" inputmode="numeric"></div>
+      <div class="fd"><label for="mtgBal">기존 주담대 잔액</label><input type="number" id="mtgBal" value="27000" step="500" inputmode="numeric"></div>
+      <div class="fd"><label for="credit">신용대출 동원액</label><input type="number" id="credit" value="" placeholder="미입력" step="500" inputmode="numeric"></div>
+      <div class="fd"><label for="rate">주담대 금리 <b>%</b></label><input type="number" id="rate" value="4.4" step="0.1" inputmode="decimal"></div>
+      <div class="fd"><label for="policy">대출 규제</label><select id="policy">
+        <option value="now" selected>현행 유지</option><option value="ease">절대한도 폐지</option>
+        <option value="tight">절대한도 20% 축소</option></select></div>
+    </div>
+  </div>
+
+</div>
 
 <footer>
-  실거래가는 국토교통부 공개자료 기준 월별 중위값. 거래 없는 달은 직전값 이월.<br>
-  대출·세금은 <b id="polVer">2026-08</b> 기준 추정이며 실제 심사와 다를 수 있습니다.
-  취득세 중과·양도세·처분기한은 은행·세무사 확인 필요.
+  실거래가는 국토교통부 공개자료 월별 중위값(4층 이상, 해제거래 제외). 거래 없는 달은 직전값 이월.<br>
+  규제지역 LTV 40% · 주담대 만기 30년 제한 · 15~25억 구간 절대한도 4억 · DSR 40% · 스트레스금리 1.5%p 기준 추정입니다.
 </footer>
 
 <script>
 "use strict";
-/* 금액 단위는 전부 만원 정수. 표시만 억 변환 */
-
-const POLICY={
-  version:"2026-08", ltv:0.70,
-  caps:[{upTo:150000,cap:60000},{upTo:250000,cap:40000},{upTo:Infinity,cap:20000}],
-  dsrRatio:0.40, stressRate:1.5, termYears:30,
-  acqTax(p){ if(p<=60000)return p*0.011;
-    if(p<=90000){const r=(p/10000*2/3-3)/100;return p*(r+0.002+r*0.1);} return p*0.033; },
-  broker(p){ const r=p<20000?.005:p<90000?.004:p<120000?.005:p<150000?.006:.007; return p*r; }
-};
-
-// series.json 없을 때 쓰는 현재 기준값
-let NOW={cur:108000,tgt:206000,curAt:"26.04 실거래",tgtAt:"26.06 시세"};
-let SR=null;              // series.json
-let mode="price", hover=null;
-
 const $=id=>document.getElementById(id);
 const eok=v=>(v/10000).toFixed(2).replace(/\.?0+$/,"")+"억";
-const eok1=v=>(v/10000).toFixed(1)+"억";
-const man=v=>Math.round(v).toLocaleString()+"만";
+const eok1=v=>(v/10000).toFixed(2)+"억";
 
-function capFor(p,mode){
-  const c=POLICY.caps.find(x=>p<=x.upTo).cap;
-  return mode==="ease"?Infinity:mode==="tight"?c*0.8:c;
-}
-function pv(monthly,annual,years){
-  if(monthly<=0)return 0;
-  const r=annual/100/12,n=years*12;
-  return r<=0?monthly*n:monthly*(Math.pow(1+r,n)-1)/(r*Math.pow(1+r,n));
-}
-function inputs(){
-  return {income:+$("income").value||0, cash:+$("cash").value||0,
-          debt:+$("debtBal").value||0, other:+$("otherPay").value||0,
-          rate:+$("rate").value, mode:$("policy").value};
-}
+const P={dsr:.40,stress:1.5,ltv:.40,term:30,
+  caps:[{u:150000,c:60000},{u:250000,c:40000},{u:Infinity,c:20000}]};
+const pv=(m,a,y)=>{if(m<=0)return 0;const r=a/100/12,n=y*12;
+  return r<=0?m*n:m*(Math.pow(1+r,n)-1)/(r*Math.pow(1+r,n));};
+const acqTax=p=>p<=60000?p*.011:p<=90000?(()=>{const r=(p/1e4*2/3-3)/100;return p*(r+.002+r*.1)})():p*.033;
+const broker=p=>p*(p<20000?.005:p<90000?.004:p<120000?.005:p<150000?.006:.007);
+const capFor=(p,m)=>{const c=P.caps.find(x=>p<=x.u).c;
+  return m==="ease"?Infinity:m==="tight"?c*.8:c;};
 
-/** 순수 계산: 매도가 · 매수가 → 대출/필요/부족 */
-function calc(sell,buy,I){
-  const ltvCap=buy*POLICY.ltv;
-  const hardCap=capFor(buy,I.mode);
-  const dsrRoom=Math.max(0,I.income*POLICY.dsrRatio-I.other)/12;
-  const dsrCap=pv(dsrRoom,I.rate+POLICY.stressRate,POLICY.termYears);
+let SR=null, NOW={cur:null,tgt:null}, mode="price", hover=null;
+
+function calc(sell,buy){
+  const income=+$("income").value||0, cash=+$("cash").value||0;
+  const mtgBal=+$("mtgBal").value||0, credit=+$("credit").value||0;
+  const rate=+$("rate").value, pol=$("policy").value;
+  const ltvCap=buy*P.ltv, hardCap=capFor(buy,pol);
+  const dsrCap=pv(income*P.dsr/12, rate+P.stress, P.term);
   const loan=Math.min(ltvCap,hardCap,dsrCap);
-  const bind=[["LTV",ltvCap],["절대한도",hardCap],["DSR",dsrCap]]
-    .filter(x=>Math.abs(x[1]-loan)<1)[0];
-  const acq=POLICY.acqTax(buy), brk=POLICY.broker(buy)+POLICY.broker(sell);
-  const need=buy+acq+brk;
-  const fund=(sell-I.debt)+loan+I.cash;
-  return {sell,buy,gap:buy-sell,ltvCap,hardCap,dsrCap,loan,
-          bind:bind?bind[0]:"—",acq,brk,need,fund,short:need-fund};
+  const need=buy+acqTax(buy)+broker(buy)+broker(sell)+300;
+  const fund=(sell-mtgBal)+loan+credit+cash;
+  return {sell,buy,gap:buy-sell,loan,need,fund,short:need-fund,
+    bind:hardCap===loan?"절대한도":dsrCap===loan?"DSR":"LTV"};
 }
 
-/* ── 차트 ─────────────────────────────────────────── */
-const W=340,H=210,PL=36,PR=8,PT=12,PB=20;
-
+/* ── 차트 ── */
+const W=340,H=200,PL=36,PR=8,PT=12,PB=20;
 function drawChart(){
-  if(!SR){ $("chart").innerHTML=""; return; }
-  const I=inputs(), L=SR.months;
-  const idx=[]; for(let i=0;i<L.length;i++) if(SR.gap[i]!=null) idx.push(i);
-  if(!idx.length) return;
-  const i0=idx[0], i1=idx[idx.length-1], n=i1-i0;
-  const x=i=>PL+(W-PL-PR)*(i-i0)/(n||1);
-
-  let svg="", vals=[], yFn, note="";
+  if(!SR){$("chart").innerHTML="";return;}
+  const L=SR.months, idx=[];
+  for(let i=0;i<L.length;i++) if(SR.gap[i]!=null) idx.push(i);
+  if(!idx.length)return;
+  const i0=idx[0], i1=idx[idx.length-1], n=i1-i0||1;
+  const x=i=>PL+(W-PL-PR)*(i-i0)/n;
   const A=SR.series.current.price, B=SR.series.target.price;
+  let svg="", note="", yF;
 
   if(mode==="price"){
-    vals=idx.flatMap(i=>[A[i],B[i]]);
-    const mx=Math.max(...vals)*1.06, mn=Math.min(...vals)*0.9;
-    yFn=v=>PT+(H-PT-PB)*(1-(v-mn)/(mx-mn));
-    if(mn<150000&&mx>150000){const y=yFn(150000).toFixed(1);
-      svg+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="var(--edge)" stroke-dasharray="3 3" opacity=".6"/><text x="${PL+3}" y="${+y-4}" fill="var(--edge)">15억 · 대출한도 분기점</text>`;}
-    // 격차 음영
-    svg+=`<path d="${idx.map((i,k)=>(k?"L":"M")+x(i).toFixed(1)+" "+yFn(B[i]).toFixed(1)).join(" ")} ${idx.slice().reverse().map(i=>"L"+x(i).toFixed(1)+" "+yFn(A[i]).toFixed(1)).join(" ")} Z" fill="var(--gapc)" opacity=".10"/>`;
-    svg+=line(idx,i=>B[i],yFn,x,"var(--b)");
-    svg+=line(idx,i=>A[i],yFn,x,"var(--a)");
-    svg+=axis(yFn,mx,mn);
-    note=`<span style="color:var(--a)">━</span> 강나루현대 &nbsp; <span style="color:var(--b)">━</span> 마포태영 &nbsp; <span style="color:var(--gapc)">▨</span> 격차`;
+    const vals=idx.flatMap(i=>[A[i],B[i]]);
+    const mx=Math.max(...vals)*1.06, mn=Math.min(...vals)*.9;
+    yF=v=>PT+(H-PT-PB)*(1-(v-mn)/(mx-mn));
+    if(mn<150000&&mx>150000){const y=yF(150000).toFixed(1);
+      svg+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="var(--b2)" stroke-dasharray="3 3" opacity=".55"/>
+            <text x="${PL+3}" y="${+y-4}" fill="var(--b2)">15억 · 대출한도 분기점</text>`;}
+    svg+=`<path d="${idx.map((i,k)=>(k?"L":"M")+x(i).toFixed(1)+" "+yF(B[i]).toFixed(1)).join(" ")} ${idx.slice().reverse().map(i=>"L"+x(i).toFixed(1)+" "+yF(A[i]).toFixed(1)).join(" ")} Z" fill="var(--b3)" opacity=".14"/>`;
+    svg+=path(idx,i=>B[i],yF,x,"var(--b1)")+path(idx,i=>A[i],yF,x,"var(--b3)");
+    svg+=axis(yF,mx,mn);
+    note=`<span style="color:var(--b3)">━</span> 강나루현대 &nbsp; <span style="color:var(--b1)">━</span> 마포태영 &nbsp; 음영 = 격차`;
   }
   else if(mode==="gap"){
-    vals=idx.map(i=>SR.gap[i]);
-    const mx=Math.max(...vals)*1.06, mn=Math.min(0,Math.min(...vals));
-    yFn=v=>PT+(H-PT-PB)*(1-(v-mn)/(mx-mn));
-    const med=SR.gap_stats.median, y=yFn(med).toFixed(1);
+    const vals=idx.map(i=>SR.gap[i]);
+    const mx=Math.max(...vals)*1.06, mn=Math.min(0,...vals);
+    yF=v=>PT+(H-PT-PB)*(1-(v-mn)/(mx-mn));
+    const med=SR.gap_stats.median,y=yF(med).toFixed(1);
     svg+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="var(--dim)" stroke-dasharray="2 3" opacity=".5"/><text x="${PL+3}" y="${+y-4}">역대 중위 ${eok1(med)}</text>`;
-    svg+=`<path d="${idx.map((i,k)=>(k?"L":"M")+x(i).toFixed(1)+" "+yFn(SR.gap[i]).toFixed(1)).join(" ")} L${x(i1)} ${H-PB} L${PL} ${H-PB} Z" fill="var(--gapc)" opacity=".14"/>`;
-    svg+=line(idx,i=>SR.gap[i],yFn,x,"var(--gapc)");
-    svg+=axis(yFn,mx,mn);
-    note=`마포태영 − 강나루현대. 곡선이 아래로 내려간 구간이 <b style="color:var(--ink)">따라잡기 쉬웠던 시기</b>입니다.`;
+    svg+=`<path d="${idx.map((i,k)=>(k?"L":"M")+x(i).toFixed(1)+" "+yF(SR.gap[i]).toFixed(1)).join(" ")} L${x(i1)} ${H-PB} L${PL} ${H-PB} Z" fill="var(--b2)" opacity=".13"/>`;
+    svg+=path(idx,i=>SR.gap[i],yF,x,"var(--b1)")+axis(yF,mx,mn);
+    note=`마포태영 − 강나루현대. 곡선이 낮은 구간이 <b>따라잡기 쉬웠던 시기</b>입니다.`;
   }
-  else{ // short — 백테스트
-    const S=idx.map(i=>calc(A[i],B[i],I).short);
+  else{
+    const S=idx.map(i=>calc(A[i],B[i]).short);
     const mx=Math.max(...S,0)*1.06, mn=Math.min(...S,0)*1.1;
-    yFn=v=>PT+(H-PT-PB)*(1-(v-mn)/(mx-mn));
-    const y0=yFn(0).toFixed(1);
-    svg+=`<rect x="${PL}" y="${y0}" width="${W-PL-PR}" height="${Math.max(0,H-PB-y0).toFixed(1)}" fill="var(--ok)" opacity=".10"/>`;
-    svg+=`<line x1="${PL}" y1="${y0}" x2="${W-PR}" y2="${y0}" stroke="var(--ok)" stroke-width="1"/><text x="${PL+3}" y="${+y0-4}" fill="var(--ok)">이 아래면 실행 가능</text>`;
-    svg+=`<path d="${idx.map((i,k)=>(k?"L":"M")+x(i).toFixed(1)+" "+yFn(S[k]).toFixed(1)).join(" ")}" fill="none" stroke="var(--gapc)" stroke-width="1.7"/>`;
-    svg+=axis(yFn,mx,mn);
-    const feas=idx.filter((i,k)=>S[k]<=0);
-    note=feas.length
-      ? `지난 20년 중 <b style="color:var(--ok)">${feas.length}개월</b>이 실행 가능 구간이었습니다. 마지막은 <b style="color:var(--ink)">${L[feas[feas.length-1]]}</b>.`
-      : `지금의 소득·현금·규제로는 <b style="color:var(--gapc)">지난 20년 중 실행 가능했던 달이 없습니다.</b> 현금을 더 모으거나 목표를 조정해야 합니다.`;
+    yF=v=>PT+(H-PT-PB)*(1-(v-mn)/(mx-mn));
+    const y0=yF(0).toFixed(1);
+    svg+=`<rect x="${PL}" y="${y0}" width="${W-PL-PR}" height="${Math.max(0,H-PB-y0).toFixed(1)}" fill="var(--b3)" opacity=".16"/>`;
+    svg+=`<line x1="${PL}" y1="${y0}" x2="${W-PR}" y2="${y0}" stroke="var(--b2)"/><text x="${PL+3}" y="${+y0-4}" fill="var(--b2)">이 아래면 실행 가능</text>`;
+    svg+=`<path d="${idx.map((i,k)=>(k?"L":"M")+x(i).toFixed(1)+" "+yF(S[k]).toFixed(1)).join(" ")}" fill="none" stroke="var(--b1)" stroke-width="1.7"/>`;
+    svg+=axis(yF,mx,mn);
+    const f=idx.filter((i,k)=>S[k]<=0);
+    note=f.length?`지난 기간 중 <b>${f.length}개월</b>이 실행 가능 구간이었습니다. 마지막은 <b>${L[f[f.length-1]]}</b>.`
+      :`지금 소득·현금·규제로는 <b>실행 가능했던 달이 한 번도 없습니다.</b>`;
   }
-
-  // 커서
-  const hi=hover!=null?hover:i1;
-  svg+=`<line x1="${x(hi)}" y1="${PT}" x2="${x(hi)}" y2="${H-PB}" stroke="var(--ink)" opacity=".45"/>`;
+  const hi=hover??i1;
+  svg+=`<line x1="${x(hi)}" y1="${PT}" x2="${x(hi)}" y2="${H-PB}" stroke="var(--ink)" opacity=".35"/>`;
   svg+=`<text x="${PL}" y="${H-5}">${L[i0]}</text><text x="${W-PR-30}" y="${H-5}">${L[i1]}</text>`;
   $("chart").innerHTML=svg;
-  $("chartLegend").innerHTML=note;
-  $("histRange").textContent=`${L[i0]} – ${L[i1]}`;
+  $("chartLg").innerHTML=note;
+  $("histRange").textContent=`${L[i0]} – ${L[i1]} · 월별 중위값 · 4층 이상`;
 
-  // 리드아웃
-  const r=calc(A[hi],B[hi],I);
-  $("roYm").textContent=L[hi]+(SR.series.target.filled[hi]||SR.series.current.filled[hi]?" *":"");
-  $("roVal").innerHTML=`강나루 <b>${eok1(A[hi])}</b> · 마포태영 <b>${eok1(B[hi])}</b><br>`
-    +`격차 <b>${eok1(r.gap)}</b> · 그때였다면 ${r.short<=0
-      ? `<b style="color:var(--ok)">실행 가능 (+${eok1(-r.short)})</b>`
-      : `<b style="color:var(--gapc)">${eok1(r.short)} 부족</b>`}`;
+  const rr=calc(A[hi],B[hi]);
+  $("roYm").textContent=L[hi];
+  $("roVal").innerHTML=`강나루 <b>${eok1(A[hi])}</b> · 마포태영 <b>${eok1(B[hi])}</b><br>격차 <b>${eok1(rr.gap)}</b> · `
+    +(rr.short<=0?`<b>실행 가능 (+${eok1(-rr.short)})</b>`:`<b>${eok1(rr.short)} 부족</b>`);
 }
-function line(idx,f,y,x,c){
-  return `<path d="${idx.map((i,k)=>(k?"L":"M")+x(i).toFixed(1)+" "+y(f(i)).toFixed(1)).join(" ")}" fill="none" stroke="${c}" stroke-width="1.7"/>`;
-}
-function axis(y,mx,mn){
-  return `<text x="2" y="${(y(mx)+8).toFixed(1)}">${eok1(mx)}</text><text x="2" y="${(y(mn)-2).toFixed(1)}">${eok1(mn)}</text>`;
-}
+const path=(idx,f,y,x,c)=>`<path d="${idx.map((i,k)=>(k?"L":"M")+x(i).toFixed(1)+" "+y(f(i)).toFixed(1)).join(" ")}" fill="none" stroke="${c}" stroke-width="1.8"/>`;
+const axis=(y,mx,mn)=>`<text x="2" y="${(y(mx)+8).toFixed(1)}">${eok1(mx)}</text><text x="2" y="${(y(mn)-2).toFixed(1)}">${eok1(mn)}</text>`;
 
-/* ── 렌더 ─────────────────────────────────────────── */
 function render(){
-  const I=inputs();
-  $("oIncome").textContent=eok(I.income); $("oCash").textContent=eok(I.cash);
-  $("oDebt").textContent=eok(I.debt);     $("oOther").textContent=man(I.other);
-  $("oRate").textContent=I.rate.toFixed(1)+"%"; $("polVer").textContent=POLICY.version;
-  const dA=+$("dropA").value, dB=+$("dropB").value;
-  $("oDA").textContent="−"+dA+"%"; $("oDB").textContent="−"+dB+"%";
+  $("asof").textContent=new Date().toISOString().slice(0,10)+" 기준";
+  const dA=+$("dropA").value,dB=+$("dropB").value;
+  $("oDA").textContent="−"+dA+"%";$("oDB").textContent="−"+dB+"%";
+  ["cash","credit"].forEach(k=>$(k).classList.toggle("miss",$(k).value.trim()===""));
 
-  const now=calc(NOW.cur,NOW.tgt,I);
+  if(!NOW.cur||!NOW.tgt){
+    $("dataBar").hidden=false;
+    $("dataBar").innerHTML=`<span class="t">실거래 데이터가 아직 없습니다</span>`
+      +`<b>collector.py</b>를 실행해 <b>data/series.json</b>이 만들어지면 이 화면에 두 단지의 20년 격차 곡선과 부족액 백테스트가 표시됩니다. `
+      +`그 전까지는 격차 분석을 계산할 수 없어 비워둡니다.`;
+    ["hBig","hDelta","mCur","mTgt","mRatio","mPct"].forEach(k=>$(k).textContent="–");
+    $("pctBox").style.display="none";
+    $("scen").innerHTML=`<tr><td>데이터 수집 후 계산됩니다</td><td>–</td></tr>`;
+    $("scenNote").innerHTML=`<span class="tt">지금 할 일</span>공공데이터포털에서 인증키를 받아 <b>collector.py</b>를 한 번 실행하세요.`;
+    return;
+  }
+  $("dataBar").hidden=true; $("pctBox").style.display="";
 
-  // hero
+  const now=calc(NOW.cur,NOW.tgt);
   $("hBig").textContent=eok1(now.gap);
-  $("hBig").className="big no";
-  $("hSub").innerHTML=`마포태영 <b>${eok1(NOW.tgt)}</b> − 강나루현대 <b>${eok1(NOW.cur)}</b>`
-    +` · 배수 <b>${(NOW.tgt/NOW.cur).toFixed(2)}x</b>`;
+  $("mCur").textContent=eok1(NOW.cur);
+  $("mTgt").textContent=eok1(NOW.tgt);
+  $("mRatio").textContent=(NOW.tgt/NOW.cur).toFixed(2)+"x";
 
   if(SR&&SR.gap_stats){
     const g=SR.gap_stats;
-    $("pctMark").style.left=g.percentile+"%";
-    $("pctTxt").innerHTML=`${g.first_month} 이후 ${g.n}개월 중 <b>상위 ${(100-g.percentile).toFixed(0)}%</b>`
-      +` · 역대 최소 <b>${eok1(g.min)}</b> / 중위 <b>${eok1(g.median)}</b> / 최대 <b>${eok1(g.max)}</b>`;
-    $("pctBox").hidden=false;
-  } else $("pctBox").hidden=true;
+    $("pMark").style.left=g.percentile+"%";
+    $("mPct").textContent="상위 "+(100-g.percentile).toFixed(0)+"%";
+    $("hDelta").textContent=`역대 ${g.n}개월 중 상위 ${(100-g.percentile).toFixed(0)}%`;
+    $("pTxt").innerHTML=`${g.first_month} 이후 기록 · 역대 최소 <b>${eok1(g.min)}</b> / 중위 <b>${eok1(g.median)}</b> / 최대 <b>${eok1(g.max)}</b>`;
+  }
 
-  // 대출 바
-  const mx=Math.max(now.ltvCap,now.hardCap===Infinity?now.ltvCap:now.hardCap,now.dsrCap,1);
-  const set=(b,f,v,val,nm)=>{
-    $(v).textContent=val===Infinity?"제한 없음":eok1(val);
-    $(f).style.width=(val===Infinity?100:Math.min(100,val/mx*100))+"%";
-    $(b).classList.toggle("bind",now.bind===nm);
-  };
-  set("bLtv","fLtv","vLtv",now.ltvCap,"LTV");
-  set("bCap","fCap","vCap",now.hardCap,"절대한도");
-  set("bDsr","fDsr","vDsr",now.dsrCap,"DSR");
-  $("bindNote").innerHTML=`실제 대출 = 셋 중 최솟값 <b style="color:var(--edge)">${eok1(now.loan)}</b> · 병목은 <b style="color:var(--edge)">${now.bind}</b>`
-    +(now.bind==="절대한도"?". 소득이 올라도 대출은 늘지 않습니다.":"");
-
-  // 하락 시나리오
-  const s=calc(NOW.cur*(1-dA/100),NOW.tgt*(1-dB/100),I);
+  const s=calc(NOW.cur*(1-dA/100),NOW.tgt*(1-dB/100));
   $("scen").innerHTML=`
     <tr><td>강나루현대 매도가</td><td>${eok1(s.sell)}</td></tr>
     <tr><td>마포태영 매수가</td><td>${eok1(s.buy)}</td></tr>
-    <tr><td><b>격차</b><span class="hint">현재 ${eok1(now.gap)} → </span></td><td>${eok1(s.gap)}</td></tr>
+    <tr><td>격차<span class="hint">현재 ${eok1(now.gap)} →</span></td><td>${eok1(s.gap)}</td></tr>
     <tr><td>대출 가능액<span class="hint">${s.bind} 기준</span></td><td>${eok1(s.loan)}</td></tr>
-    <tr><td>취득세 + 중개보수</td><td>${man(s.acq+s.brk)}</td></tr>
-    <tr><td><b>${s.short<=0?"남는 금액":"부족액"}</b></td><td style="color:${s.short<=0?"var(--ok)":"var(--gapc)"}">${eok1(Math.abs(s.short))}</td></tr>`;
+    <tr><td><b>${s.short<=0?"남는 금액":"부족액"}</b></td><td>${eok1(Math.abs(s.short))}</td></tr>`;
 
-  // 동반 하락 임계 탐색
   let need=null;
-  for(let d=0;d<=60;d++){ if(calc(NOW.cur*(1-d/100),NOW.tgt*(1-d/100),I).short<=0){need=d;break;} }
+  for(let d=0;d<=60;d++){if(calc(NOW.cur*(1-d/100),NOW.tgt*(1-d/100)).short<=0){need=d;break;}}
   const f=[];
-  if(need===null) f.push(`두 단지가 <b>동반 60% 하락</b>해도 지금 현금으로는 부족합니다. 현금 확보가 유일한 레버입니다.`);
-  else if(need===0) f.push(`현재 가격으로 <b>이미 실행 가능</b>합니다.`);
-  else f.push(`두 단지가 같은 비율로 <b>${need}% 동반 하락</b>하면 실행 가능해집니다. 그 지점의 마포태영 가격은 <b>${eok1(NOW.tgt*(1-need/100))}</b>.`);
-  if(I.mode!=="ease"&&NOW.tgt>150000&&NOW.tgt*(1-dB/100)<=150000)
-    f.push(`이 시나리오에서 마포태영이 <b>15억 아래로 내려갔습니다</b>. 대출 한도가 4억 → 6억으로 <b>2억 늘어납니다</b>.`);
+  if(need===null)f.push(`두 단지가 <b>동반 60% 하락</b>해도 지금 자금으로는 부족합니다.`);
+  else if(need===0)f.push(`현재 가격으로 <b>이미 실행 가능</b>합니다.`);
+  else f.push(`두 단지가 같은 비율로 <b>${need}% 동반 하락</b>하면 실행 가능해집니다. 그때 마포태영은 <b>${eok1(NOW.tgt*(1-need/100))}</b>.`);
+  if($("policy").value!=="ease"&&NOW.tgt>150000&&NOW.tgt*(1-dB/100)<=150000)
+    f.push(`이 시나리오에서 마포태영이 <b>15억 아래</b>로 내려가 대출 한도가 4억 → 6억으로 <b>2억 늘어납니다</b>.`);
   f.push(`동반 하락이 유리한 이유는 격차가 줄어서만이 아닙니다. <b>현금은 명목이 고정</b>이라 하락장에서 상대적 구매력이 커집니다.`);
   f.push(`반대 위험: 하락장에는 <b>내 집이 안 팔릴 수 있습니다.</b> 이 계산은 매도 성사를 전제합니다.`);
-  $("scenFlag").innerHTML=f.map(x=>"· "+x).join("<br><br>");
+  $("scenNote").innerHTML=`<span class="tt">읽는 법</span>`+f.map(x=>"· "+x).join("<br><br>");
 
   drawChart();
 }
 
-/* ── 상호작용 ─────────────────────────────────────── */
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{
   document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected","false"));
-  t.setAttribute("aria-selected","true"); mode=t.dataset.m; drawChart();
-}));
+  t.setAttribute("aria-selected","true");mode=t.dataset.m;drawChart();}));
+
 function scrub(e){
   if(!SR)return;
-  const r=$("chart").getBoundingClientRect();
-  const px=((e.touches?e.touches[0].clientX:e.clientX)-r.left)/r.width*W;
-  const idx=[]; for(let i=0;i<SR.months.length;i++) if(SR.gap[i]!=null) idx.push(i);
+  const rc=$("chart").getBoundingClientRect();
+  const px=((e.touches?e.touches[0].clientX:e.clientX)-rc.left)/rc.width*W;
+  const idx=[];for(let i=0;i<SR.months.length;i++)if(SR.gap[i]!=null)idx.push(i);
   if(!idx.length)return;
   const i0=idx[0],i1=idx[idx.length-1];
   const t=Math.min(1,Math.max(0,(px-PL)/(W-PL-PR)));
-  hover=Math.round(i0+t*(i1-i0)); drawChart();
+  hover=Math.round(i0+t*(i1-i0));drawChart();
 }
 ["pointerdown","pointermove"].forEach(ev=>$("chart").addEventListener(ev,e=>{
   if(ev==="pointermove"&&e.buttons===0&&e.pointerType==="mouse")return;
-  e.preventDefault(); scrub(e);
-},{passive:false}));
+  e.preventDefault();scrub(e);},{passive:false}));
 
-const KEYS=["income","cash","debtBal","otherPay","rate","policy","dropA","dropB"];
+const KEYS=["income","cash","mtgBal","credit","rate","policy","dropA","dropB"];
 let mem={};
-function save(){const o={};KEYS.forEach(k=>o[k]=$(k).value);mem=o;
-  try{localStorage.setItem("gap-obs",JSON.stringify(o))}catch(e){}}
-function load(){let o=mem;
+const save=()=>{const o={};KEYS.forEach(k=>o[k]=$(k).value);mem=o;
+  try{localStorage.setItem("gap-obs",JSON.stringify(o))}catch(e){}};
+const load=()=>{let o=mem;
   try{const s=localStorage.getItem("gap-obs");if(s)o=JSON.parse(s)}catch(e){}
-  if(o)KEYS.forEach(k=>{if(o[k]!==undefined)$(k).value=o[k]})}
-KEYS.forEach(k=>$(k).addEventListener("input",()=>{save();render()}));
+  if(o)KEYS.forEach(k=>{if(o[k]!==undefined)$(k).value=o[k]})};
+KEYS.forEach(k=>{$(k).addEventListener("input",()=>{save();render()});
+  $(k).addEventListener("change",()=>{save();render()})});
 
-async function boot(){
-  load(); render();
+(async()=>{
+  load();render();
   try{
-    const r=await fetch("data/series.json",{cache:"no-store"});
-    if(!r.ok) throw 0;
-    const d=await r.json();
-    if(!d.gap_stats) throw 0;
+    const res=await fetch("data/series.json",{cache:"no-store"});
+    if(!res.ok)throw 0;
+    const d=await res.json();
+    if(!d.gap_stats)throw 0;
     SR=d;
     const A=d.series.current.price,B=d.series.target.price;
-    for(let i=d.months.length-1;i>=0;i--){
-      if(A[i]&&B[i]){ NOW={cur:A[i],tgt:B[i],curAt:d.months[i],tgtAt:d.months[i]}; break; }
-    }
-    $("secEmpty").hidden=true; $("secHist").hidden=false;
-  }catch(e){
-    $("secEmpty").hidden=false; $("secHist").hidden=true;
-  }
+    for(let i=d.months.length-1;i>=0;i--){if(A[i]&&B[i]){NOW={cur:A[i],tgt:B[i]};break;}}
+  }catch(e){SR=null;}
   render();
-}
-boot();
+})();
 </script>
 </body>
 </html>
