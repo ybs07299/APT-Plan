@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F4F7FC">
+<title>자금 동원 현황</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css">
+<style>
+:root{
+  --bg:#F4F7FC; --card:#FFFFFF; --line:#E8EDF6; --line2:#F0F4FA;
+  --ink:#152344; --ink2:#31415F; --dim:#8593AE; --faint:#A9B4C9;
+  --b1:#12327E;   /* 매도 순수입 */
+  --b2:#2563EB;   /* 주담대 / 전세 */
+  --b3:#5B9BF8;   /* 신용대출 */
+  --b4:#93C0FC;   /* 사내대출 */
+  --b5:#C6DDFE;   /* 현금 */
+  --gapc:#DCE4F0; /* 부족 */
+  --pri:#2563EB;
+  --shadow:0 1px 2px rgba(21,35,68,.04),0 6px 18px rgba(21,35,68,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);
+ font-family:"Pretendard Variable",Pretendard,-apple-system,system-ui,sans-serif;
+ font-size:14px;line-height:1.5;font-variant-numeric:tabular-nums;
+ padding:0 14px calc(36px + env(safe-area-inset-bottom));max-width:1040px;margin:0 auto}
+
+/* topbar */
+.top{display:flex;align-items:center;justify-content:space-between;padding:20px 2px 16px}
+.brand{display:flex;align-items:center;gap:9px}
+.mark{width:16px;height:16px;border-radius:5px;border:2.5px solid var(--pri)}
+.brand h1{font-size:15px;font-weight:700;letter-spacing:-.01em}
+.route{font-size:12px;color:var(--dim);text-align:right;line-height:1.45}
+.route b{color:var(--ink2);font-weight:600}
+
+.grid{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:840px){
+  .grid{grid-template-columns:340px 1fr}
+  .span2{grid-column:1/-1}
+}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:18px;box-shadow:var(--shadow)}
+.card h2{font-size:13.5px;font-weight:700;letter-spacing:-.01em;margin-bottom:2px}
+.card .cap{font-size:11.5px;color:var(--faint);margin-bottom:14px}
+
+/* KPI */
+.kpi .lbl{font-size:12px;color:var(--dim)}
+.kpi .big{font-size:clamp(30px,8.5vw,38px);font-weight:800;letter-spacing:-.035em;
+  line-height:1.08;margin:5px 0 3px;color:var(--b1)}
+.kpi .big.ok{color:#0F7A5A}
+.kpi .delta{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;
+  color:var(--pri);background:#EEF4FF;border-radius:20px;padding:3px 9px;margin-top:4px}
+.mini{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-top:16px}
+.mini div{background:var(--card);padding:12px 13px}
+.mini .k{font-size:11px;color:var(--dim);margin-bottom:4px}
+.mini .v{font-size:17px;font-weight:700;letter-spacing:-.02em}
+.mini .v small{font-size:11px;font-weight:500;color:var(--faint);margin-left:3px}
+
+/* stacked bar */
+.stackbar{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--line2);margin-top:16px}
+.stackbar i{height:100%}
+.sblab{display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:7px}
+
+/* donut */
+.donutwrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.donut{position:relative;flex:0 0 148px;width:148px;height:148px}
+.donut svg{transform:rotate(-90deg)}
+.donut .ctr{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center}
+.donut .ctr .n{font-size:19px;font-weight:800;letter-spacing:-.03em}
+.donut .ctr .t{font-size:10.5px;color:var(--faint);margin-top:1px}
+.dlist{flex:1;min-width:180px;display:flex;flex-direction:column;gap:9px}
+.di{display:flex;align-items:center;gap:9px;font-size:12.5px}
+.di .dot{width:9px;height:9px;border-radius:50%;flex:0 0 9px}
+.di .n{flex:1;color:var(--ink2)}
+.di .v{font-weight:700}
+.di.off{opacity:.4}
+
+/* bars */
+.bl{margin-bottom:13px}
+.bl .r{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px}
+.bl .r .k{color:var(--dim)}
+.bl .r .v{font-weight:700}
+.bl .t{height:8px;background:var(--line2);border-radius:5px;overflow:hidden}
+.bl .f{height:100%;border-radius:5px;background:var(--b3);transition:width .3s}
+.bl.bind .r .v{color:var(--pri)}
+.bl.bind .f{background:var(--pri)}
+.bl.bind .r .k::after{content:" · 병목";color:var(--pri);font-weight:600}
+
+/* dsr */
+.dsrrow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:520px){.dsrrow{grid-template-columns:1fr}}
+.dg{background:#F8FAFE;border:1px solid var(--line);border-radius:10px;padding:13px}
+.dg .h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px}
+.dg .who{font-weight:700;font-size:13px}
+.dg .pc{font-size:12px;font-weight:700;color:var(--pri)}
+.dg .t{height:8px;background:#E4EBF7;border-radius:5px;overflow:hidden;display:flex}
+.dg .t i{height:100%}
+.dg .d{margin-top:9px;font-size:11px;color:var(--dim);line-height:1.7}
+.dg .d b{color:var(--ink2);font-weight:600}
+
+/* source list */
+.src{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--line2)}
+.src:last-child{border-bottom:none}
+.src .bar{width:4px;height:30px;border-radius:2px;flex:0 0 4px}
+.src .n{flex:1;font-size:13px;font-weight:600;color:var(--ink2)}
+.src .n small{display:block;font-size:11px;color:var(--faint);font-weight:400;margin-top:2px;line-height:1.5}
+.src .v{font-weight:700;font-size:14.5px;white-space:nowrap}
+.src.off{opacity:.42}
+
+/* form */
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.fd{margin-bottom:11px}
+.fd label{display:block;font-size:11.5px;color:var(--dim);margin-bottom:5px}
+.fd label em{font-style:normal;font-size:10.5px;padding:1px 6px;border-radius:20px;margin-left:4px}
+.fd label em.src-u{color:#12327E;background:#E8F0FE}
+.fd label em.src-w{color:#5B6B85;background:#EEF1F6}
+.fd label em.src-x{color:#8593AE;background:#F2F4F8}
+input.miss{border-color:#C9D6EA;border-style:dashed;background:#FBFCFE}
+.warnbar{background:#FFF;border:1px solid #D8E5FD;border-left:3px solid var(--pri);
+ border-radius:10px;padding:13px 15px;margin-bottom:14px;font-size:12.5px;line-height:1.7;color:var(--ink2)}
+.warnbar b{color:var(--b1)}
+.warnbar .t{display:block;font-weight:700;color:var(--b1);font-size:12.5px;margin-bottom:4px}
+input[type=number],select{width:100%;background:#F8FAFE;border:1px solid var(--line);color:var(--ink);
+ border-radius:8px;padding:9px 11px;font:inherit;font-weight:600;font-variant-numeric:tabular-nums}
+input:focus,select:focus{outline:2px solid rgba(37,99,235,.35);outline-offset:0;border-color:var(--pri);background:#fff}
+.chk{display:flex;align-items:flex-start;gap:9px;padding:11px 12px;font-size:12.5px;color:var(--ink2);
+ background:#F8FAFE;border:1px solid var(--line);border-radius:9px;margin:4px 0 11px;cursor:pointer;line-height:1.55}
+.chk input{margin-top:2px;accent-color:var(--pri);width:15px;height:15px;flex:0 0 15px}
+
+table{width:100%;border-collapse:collapse;font-size:13px}
+td{padding:9px 0;border-bottom:1px solid var(--line2);color:var(--ink2)}
+td:last-child{text-align:right;font-weight:700;color:var(--ink)}
+tr:last-child td{border-bottom:none}
+td .hint{display:block;font-size:11px;color:var(--faint);font-weight:400;margin-top:2px}
+tr.sum td{border-top:1.5px solid var(--line);border-bottom:none;padding-top:11px;font-weight:800}
+
+.note{background:#F1F6FF;border:1px solid #D8E5FD;border-radius:10px;padding:13px 14px;
+ font-size:12.5px;line-height:1.7;color:var(--ink2);margin-top:12px}
+.note b{color:var(--b1);font-weight:700}
+.note .tt{display:block;font-size:12.5px;font-weight:700;color:var(--b1);margin-bottom:4px}
+footer{margin-top:26px;padding:16px 4px;font-size:11px;color:var(--faint);line-height:1.75}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="brand"><span class="mark"></span><h1>자금 동원 현황</h1></div>
+  <div class="route">강나루현대 24평 → <b>마포태영 34평</b><br><span id="asof">–</span></div>
+</div>
+
+<div class="warnbar" id="missBar" hidden></div>
+<div class="grid">
+
+  <div class="card kpi">
+    <div class="lbl" id="hLbl">영끌해도 부족한 금액</div>
+    <div class="big" id="hBig">–</div>
+    <div class="delta" id="hDelta">–</div>
+    <div class="mini">
+      <div><div class="k">동원 가능</div><div class="v" id="mTot">–</div></div>
+      <div><div class="k">필요 총액</div><div class="v" id="mNeed">–</div></div>
+      <div><div class="k">신규 주담대</div><div class="v" id="mMtg">–</div></div>
+      <div><div class="k">월 상환액</div><div class="v" id="mRate">–</div></div>
+    </div>
+    <div class="stackbar" id="sb"></div>
+    <div class="sblab"><span id="sbL">–</span><span id="sbR">–</span></div>
+  </div>
+
+  <div class="card">
+    <h2>조달 구성</h2>
+    <div class="cap">필요 총액 대비 각 수단이 채우는 비중</div>
+    <div class="donutwrap">
+      <div class="donut">
+        <svg viewBox="0 0 100 100" width="148" height="148" id="donut"></svg>
+        <div class="ctr"><span class="n" id="dCtr">–</span><span class="t">달성률</span></div>
+      </div>
+      <div class="dlist" id="dList"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>주담대 한도</h2>
+    <div class="cap">규제지역 LTV 40% 적용 · 세 값 중 최솟값이 실제 한도</div>
+    <div class="bl" id="bLtv"><div class="r"><span class="k">LTV 40%</span><span class="v" id="vLtv">–</span></div><div class="t"><div class="f" id="fLtv"></div></div></div>
+    <div class="bl" id="bDsr"><div class="r"><span class="k">DSR 40%</span><span class="v" id="vDsr">–</span></div><div class="t"><div class="f" id="fDsr"></div></div></div>
+    <div class="bl" id="bCap"><div class="r"><span class="k">규제지역 절대한도</span><span class="v" id="vCap">–</span></div><div class="t"><div class="f" id="fCap"></div></div></div>
+    <div class="note" id="capNote">–</div>
+  </div>
+
+  <div class="card">
+    <h2>DSR 여력</h2>
+    <div class="cap">DSR은 부부합산이 아니라 차주별로 따로 계산됩니다</div>
+    <div class="dsrrow"><div class="dg" id="dgMe"></div><div class="dg" id="dgSp"></div></div>
+    <div class="note" id="dsrNote">–</div>
+  </div>
+
+  <div class="card span2">
+    <h2>조달 수단별 한도</h2>
+    <div class="cap" id="srcCap">–</div>
+    <div id="srcList"></div>
+  </div>
+
+  <div class="card">
+    <h2>소득 · 기존 부채</h2>
+    <div class="cap">단위: 만원</div>
+    <div class="f2">
+      <div class="fd"><label for="incMe">본인 연소득 <em class="src-u">입력하신 값</em></label><input type="number" id="incMe" value="8000" step="100" inputmode="numeric"></div>
+      <div class="fd"><label for="incSp">아내 연소득 <em class="src-u">입력하신 값</em></label><input type="number" id="incSp" value="8000" step="100" inputmode="numeric"></div>
+      <div class="fd"><label for="corpBal">사내대출 잔액 <em class="src-x">본인 · 원금 1억, 10년만기 3년차 → 금리를 몰라 계산 불가</em></label><input type="number" id="corpBal" value="" placeholder="미입력" step="100" inputmode="numeric"></div>
+      <div class="fd"><label for="corpPay">사내대출 연 원리금 <em class="src-x">고지서 확인 필요</em></label><input type="number" id="corpPay" value="" placeholder="미입력" step="10" inputmode="numeric"></div>
+      <div class="fd"><label for="mtgBal">기존 주담대 잔액 <em class="src-u">아내 · 입력하신 값</em></label><input type="number" id="mtgBal" value="27000" step="100" inputmode="numeric"></div>
+      <div class="fd"><label for="cash">보유 현금 <em class="src-x">미입력</em></label><input type="number" id="cash" value="" placeholder="미입력" step="500" inputmode="numeric"></div>
+    </div>
+    <label class="chk"><input type="checkbox" id="corpDsr"><span>사내대출을 <b>금융권 신용대출로 간주</b> — DSR과 1인당 1억 규제에 함께 반영합니다. 사내근로복지기금 대출은 안 잡히는 경우가 많으니 회사에 확인 후 체크하세요.</span></label>
+    <div class="fd"><label for="corpMore">사내대출 추가 여력 <em class="src-x">회사 한도 확인 필요</em></label><input type="number" id="corpMore" value="" placeholder="미입력" step="500" inputmode="numeric"></div>
+  </div>
+
+  <div class="card">
+    <h2>매물 · 대출 조건</h2>
+    <div class="cap">단위: 만원 · 매도가·매수가는 제가 웹에서 찾은 추정치이니 실제 시세로 바꾸세요</div>
+    <div class="f2">
+      <div class="fd"><label for="sellP">강나루현대 매도가 <em class="src-w">웹 검색 추정치</em></label><input type="number" id="sellP" value="108000" step="500" inputmode="numeric"></div>
+      <div class="fd"><label for="buyP">마포태영 매수가 <em class="src-w">웹 검색 추정치</em></label><input type="number" id="buyP" value="206000" step="500" inputmode="numeric"></div>
+      <div class="fd"><label for="rate">주담대 금리 <em>%</em></label><input type="number" id="rate" value="4.4" step="0.1" inputmode="decimal"></div>
+      <div class="fd"><label for="term">주담대 만기 <em>규제지역 30년 제한</em></label><select id="term"><option value="30" selected>30년</option></select></div>
+    </div>
+    <div class="fd"><label for="borrower">주담대 차주</label><select id="borrower">
+      <option value="sp" selected>아내 단독</option><option value="me">본인 단독</option>
+      <option value="joint">부부 공동명의 (소득 합산)</option></select></div>
+    <label class="chk"><input type="checkbox" id="jeonse"><span>전세 끼고 매수 — 주담대 대신 전세보증금을 레버리지로 사용. 전입 의무는 없지만 즉시 입주가 불가합니다.</span></label>
+    <div class="fd" id="jeonseF" hidden><label for="jeonseP">마포태영 34평 전세가 <em class="src-x">미입력</em></label><input type="number" id="jeonseP" value="" placeholder="미입력" step="1000" inputmode="numeric"></div>
+  </div>
+
+  <div class="card span2">
+    <h2>대출 실행 설계</h2>
+    <div class="cap">누가 무엇을 받고, 어떤 순서로 실행할지</div>
+    <div id="planNote"></div>
+  </div>
+
+  <div class="card">
+    <h2>필요 자금</h2>
+    <div class="cap">매수가 + 부대비용</div>
+    <table id="need"></table>
+  </div>
+
+  <div class="card">
+    <h2>대안 경로</h2>
+    <div class="cap">부족액을 메우는 방법과 각각의 대가</div>
+    <div id="alts"></div>
+  </div>
+
+</div>
+
+<footer>
+  DSR 40%(은행권) · 스트레스금리 1.5%p · 신용대출 DSR 산정만기 5년 기준 추정입니다.
+  서울 전역 규제지역(LTV 40%, 만기 30년 제한), 매수가 15~25억 구간 절대한도 4억, 신용대출 연소득 이내·1인당 1억 규제를 적용했습니다.
+  실제 심사는 은행·상품별로 달라지며, 사내대출 DSR 반영 여부와 처분기한·취득세 중과는 별도 확인이 필요합니다.
+</footer>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const eok=v=>(v/10000).toFixed(2).replace(/\.?0+$/,"")+"억";
+const eok1=v=>(v/10000).toFixed(2)+"억";
+const man=v=>Math.round(v).toLocaleString()+"만";
+
+const P={dsr:.40,stress:1.5,ct:5,cr:6.0,ltv:.40,creditCap:10000,
+  caps:[{u:150000,c:60000},{u:250000,c:40000},{u:Infinity,c:20000}]};
+
+const pv=(m,a,y)=>{if(m<=0)return 0;const r=a/100/12,n=y*12;
+  return r<=0?m*n:m*(Math.pow(1+r,n)-1)/(r*Math.pow(1+r,n));};
+const pay=(p,a,y)=>{if(p<=0)return 0;const r=a/100/12,n=y*12;
+  return p*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1);};
+const acqTax=p=>p<=60000?p*.011:p<=90000?(()=>{const r=(p/1e4*2/3-3)/100;return p*(r+.002+r*.1)})():p*.033;
+const broker=p=>p*(p<20000?.005:p<90000?.004:p<120000?.005:p<150000?.006:.007);
+
+function calc(){
+  const v=id=>+$(id).value||0;
+  const incMe=v("incMe"),incSp=v("incSp"),corpPay=v("corpPay"),corpDsr=$("corpDsr").checked;
+  const cash=v("cash"),corpMore=v("corpMore"),sellP=v("sellP"),buyP=v("buyP"),mtgBal=v("mtgBal");
+  const rate=v("rate"),term=+$("term").value,who=$("borrower").value;
+  const jeonse=$("jeonse").checked,jeonseP=v("jeonseP");
+
+  const payMe=corpDsr?corpPay:0;
+  const roomMe=Math.max(0,incMe*P.dsr-payMe), roomSp=Math.max(0,incSp*P.dsr);
+  const inc=who==="joint"?incMe+incSp:who==="me"?incMe:incSp;
+  const room=who==="joint"?roomMe+roomSp:who==="me"?roomMe:roomSp;
+
+  const sr=rate+P.stress;
+  const ltvCap=buyP*P.ltv, dsrCap=pv(room/12,sr,term), hardCap=P.caps.find(x=>buyP<=x.u).c;
+  const mortgage=jeonse?0:Math.min(ltvCap,dsrCap,hardCap);
+  const used=jeonse?0:pay(mortgage,sr,term)*12;
+
+  let leftMe=roomMe,leftSp=roomSp;
+  if(who==="me")leftMe=Math.max(0,roomMe-used);
+  else if(who==="sp")leftSp=Math.max(0,roomSp-used);
+  else{const h=used/2;leftMe=Math.max(0,roomMe-h);leftSp=Math.max(0,roomSp-h);}
+
+  const conv=r=>r/(1/P.ct+(P.cr+P.stress)/100);
+  // 신용대출: DSR 여력 / 차주별 연소득 이내 / 1인당 총 1억 이하(규제지역 구입제한 회피)
+  const corpAsCredit=corpDsr?v("corpBal"):0;
+  const creditMe=Math.max(0,Math.min(conv(leftMe),incMe,P.creditCap-corpAsCredit));
+  const creditSp=Math.max(0,Math.min(conv(leftSp),incSp,P.creditCap));
+  const overMe=corpAsCredit+creditMe>P.creditCap, overSp=creditSp>P.creditCap;
+  const mPay=pay(mortgage,rate,term), cPay=pay(creditMe+creditSp,P.cr,P.ct);
+
+  const sellNet=sellP-mtgBal, jeon=jeonse?jeonseP:0;
+  const total=sellNet+mortgage+jeon+creditMe+creditSp+corpMore+cash;
+  const acq=acqTax(buyP), brk=broker(buyP)+broker(sellP), etc=300;
+  const need=buyP+acq+brk+etc;
+
+  return{incMe,incSp,roomMe,roomSp,leftMe,leftSp,room,inc,ltvCap,dsrCap,hardCap,mortgage,mPay,cPay,overMe,overSp,corpAsCredit,
+    creditMe,creditSp,corpMore,cash,sellNet,sellP,buyP,mtgBal,jeonse,jeon,acq,brk,etc,
+    need,total,short:need-total,term,who,corpDsr,corpPay,rate};
+}
+
+function donut(segs,total){
+  const R=42,C=2*Math.PI*R;let off=0,out="";
+  out+=`<circle cx="50" cy="50" r="${R}" fill="none" stroke="#EEF3FB" stroke-width="14"/>`;
+  segs.forEach(([c,val])=>{
+    if(val<=0)return;
+    const len=val/total*C;
+    out+=`<circle cx="50" cy="50" r="${R}" fill="none" stroke="${c}" stroke-width="14"
+      stroke-dasharray="${len.toFixed(2)} ${(C-len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}"/>`;
+    off+=len;
+  });
+  return out;
+}
+
+const NEEDED=[["cash","보유 현금"],["corpBal","사내대출 잔액"],["corpPay","사내대출 연 원리금"],["corpMore","사내대출 추가 여력"]];
+function render(){
+  $("jeonseF").hidden=!$("jeonse").checked;
+  const r=calc();
+
+  // 미입력 표시
+  const miss=[];
+  NEEDED.concat($("jeonse").checked?[["jeonseP","전세가"]]:[]).forEach(([id,nm])=>{
+    const el=$(id), empty=el.value.trim()==="";
+    el.classList.toggle("miss",empty);
+    if(empty) miss.push(nm);
+  });
+  if(miss.length){
+    $("missBar").hidden=false;
+    $("missBar").innerHTML=`<span class="t">아직 채워지지 않은 값이 ${miss.length}개 있습니다</span>`
+      +`<b>${miss.join(" · ")}</b> — 모두 <b>0으로 두고</b> 계산했습니다. 임의 추정치를 넣지 않았으므로, `
+      +`아래 부족액은 <b>가장 불리한 경우의 상한</b>입니다. 실제 값을 넣으면 줄어듭니다.`;
+  } else $("missBar").hidden=true;
+  const pctDone=Math.min(100,r.total/r.need*100);
+  $("asof").textContent=new Date().toISOString().slice(0,10)+" 기준";
+
+  $("hLbl").textContent=(r.short>0?"영끌해도 부족한 금액":"영끌 시 남는 금액")+(miss.length?" (미입력 "+miss.length+"개 = 0 처리)":"");
+  $("hBig").textContent=(r.short>0?"":"+")+eok1(Math.abs(r.short));
+  $("hBig").className="big"+(r.short>0?"":" ok");
+  $("hDelta").textContent=r.short>0?`필요 자금의 ${(r.short/r.need*100).toFixed(0)}%`:"자금 충족";
+  $("mTot").innerHTML=eok1(r.total);
+  $("mNeed").innerHTML=eok1(r.need);
+  $("mMtg").innerHTML=r.jeonse?"미사용<small>전세</small>":eok1(r.mortgage);
+  $("mRate").innerHTML=Math.round(r.mPay+r.cPay).toLocaleString()+"<small>만</small>";
+
+  const segs=[["var(--b1)",r.sellNet],["var(--b2)",r.jeonse?r.jeon:r.mortgage],
+    ["var(--b3)",r.creditMe+r.creditSp],["var(--b4)",r.corpMore],["var(--b5)",r.cash],
+    ["var(--gapc)",Math.max(0,r.short)]];
+  const denom=Math.max(r.total,r.need);
+  $("sb").innerHTML=segs.map(([c,v])=>`<i style="background:${c};width:${Math.max(0,v)/denom*100}%"></i>`).join("");
+  $("sbL").textContent="동원 "+eok1(r.total);
+  $("sbR").textContent="필요 "+eok1(r.need);
+
+  // donut
+  $("donut").innerHTML=donut(segs,denom);
+  $("dCtr").textContent=pctDone.toFixed(0)+"%";
+  const dl=[["var(--b1)","매도 순수입",r.sellNet],
+    ["var(--b2)",r.jeonse?"전세보증금":"신규 주담대",r.jeonse?r.jeon:r.mortgage],
+    ["var(--b3)","신용대출 부부합",r.creditMe+r.creditSp],
+    ["var(--b4)","사내대출 추가",r.corpMore],
+    ["var(--b5)","보유 현금",r.cash],
+    ["var(--gapc)","부족",Math.max(0,r.short)]];
+  $("dList").innerHTML=dl.map(([c,n,v])=>
+    `<div class="di${v>0?"":" off"}"><i class="dot" style="background:${c}"></i><span class="n">${n}</span><span class="v">${eok1(v)}</span></div>`).join("");
+
+  // 한도 3종
+  const bmax=Math.max(r.ltvCap,r.dsrCap,r.hardCap),mn=Math.min(r.ltvCap,r.dsrCap,r.hardCap);
+  const set=(b,f,vv,val)=>{$(vv).textContent=eok1(val);
+    $(f).style.width=Math.min(100,val/bmax*100)+"%";$(b).classList.toggle("bind",val===mn);};
+  set("bLtv","fLtv","vLtv",r.ltvCap);set("bDsr","fDsr","vDsr",r.dsrCap);set("bCap","fCap","vCap",r.hardCap);
+  $("capNote").innerHTML=r.jeonse
+    ? `<span class="tt">주담대를 쓰지 않는 구조</span>전세보증금 <b>${eok1(r.jeon)}</b>이 주담대 한도 <b>${eok1(mn)}</b>보다 크면 동원 자금은 늘어납니다. 대신 즉시 입주가 불가하고 만기에 반환 의무가 생깁니다.`
+    : `<span class="tt">소득으로는 풀 수 없는 한도</span>DSR상으로는 <b>${eok1(r.dsrCap)}</b>까지 가능하지만 절대한도 <b>${eok1(r.hardCap)}</b>이 잘라냅니다. 소득을 올려도, 공동명의로 바꿔도 천장은 그대로입니다. 매수가가 <b>15억</b> 아래로 내려오면 한도가 6억으로 2억 늘어납니다.`;
+
+  // DSR 게이지
+  const g=(el,who,inc,room,left,old)=>{
+    const capA=inc*P.dsr,pct=capA>0?(capA-left)/capA*100:0;
+    const oldP=capA>0?Math.min(100,old/capA*100):0;
+    const mtgP=capA>0?Math.min(100-oldP,(room-left)/capA*100):0;
+    $(el).innerHTML=`<div class="h"><span class="who">${who}</span><span class="pc">${pct.toFixed(0)}% / 40%</span></div>
+      <div class="t"><i style="background:var(--b4);width:${oldP}%"></i><i style="background:var(--b2);width:${mtgP}%"></i></div>
+      <div class="d">연소득 <b>${eok(inc)}</b> · 한도 <b>${man(capA)}</b>/년<br>
+      기존 <b>${man(old)}</b> · 주담대 <b>${man(room-left)}</b> · 잔여 <b>${man(left)}</b></div>`;
+  };
+  g("dgMe","본인",r.incMe,r.roomMe,r.leftMe,r.corpDsr?r.corpPay:0);
+  g("dgSp","아내",r.incSp,r.roomSp,r.leftSp,0);
+  $("dsrNote").innerHTML=`<span class="tt">확인이 필요한 부분</span>`
+    +(r.corpDsr?`사내대출을 DSR에 <b>반영</b>한 상태입니다.`
+      :`사내대출을 DSR에서 <b>제외</b>한 상태입니다. 회사에 확인하세요 — 반영되면 본인 신용대출 여력이 크게 줄어듭니다.`)
+    +` 기존 주담대 <b>${eok1(r.mtgBal)}</b>은 매도와 함께 상환되는 것으로 보고 신규 심사에서 제외했습니다. 잔금일이 어긋나면 일시적으로 둘 다 잡힙니다.`;
+
+  // 조달 수단
+  const rows=[
+    ["var(--b1)","강나루현대 매도 순수입",`매도 ${eok1(r.sellP)} − 기존 주담대 ${eok1(r.mtgBal)} 상환`,r.sellNet,true],
+    r.jeonse?["var(--b2)","전세보증금","임차인 보증금. 실입주 불가, 만기 반환 의무",r.jeon,r.jeon>0]
+            :["var(--b2)","신규 주택담보대출",`${r.who==="joint"?"부부 공동":r.who==="me"?"본인":"아내"} 차주 · ${r.term}년 · 절대한도에 걸림`,r.mortgage,true],
+    ["var(--b3)","신용대출 (본인)",`DSR 잔여 ${man(r.leftMe)}/년 · 연소득 이내 · 1억 규제 반영`,r.creditMe,r.creditMe>0],
+    ["var(--b3)","신용대출 (아내)",`DSR 잔여 ${man(r.leftSp)}/년 · 연소득 이내 · 1억 규제 반영`,r.creditSp,r.creditSp>0],
+    ["var(--b4)","사내대출 추가","이미 1억 사용 중 · 회사 한도 확인 필요",r.corpMore,r.corpMore>0],
+    ["var(--b5)","보유 현금","",r.cash,r.cash>0]];
+  $("srcList").innerHTML=rows.map(([c,n,s,v,on])=>
+    `<div class="src${on?"":" off"}"><i class="bar" style="background:${c}"></i>
+     <span class="n">${n}${s?`<small>${s}</small>`:""}</span><span class="v">${eok1(v)}</span></div>`).join("");
+  $("srcCap").textContent="합계 "+eok1(r.total);
+
+  // 대출 실행 설계
+  const pn=[];
+  const best=(()=>{
+    const sr2=r.rate+P.stress, mtgPay=pay(r.mortgage,sr2,r.term)*12;
+    const cv=x=>x/(1/P.ct+(P.cr+P.stress)/100);
+    const solo=(a,b)=>{ // a가 주담대
+      const la=Math.max(0,a-mtgPay), lb=b;
+      return Math.min(cv(la),r.incMe,P.creditCap-r.corpAsCredit)+Math.min(cv(lb),r.incSp,P.creditCap);
+    };
+    const joint=(()=>{const h2=mtgPay/2;
+      return Math.min(cv(Math.max(0,r.roomMe-h2)),r.incMe,P.creditCap-r.corpAsCredit)
+           + Math.min(cv(Math.max(0,r.roomSp-h2)),r.incSp,P.creditCap);})();
+    return {me:solo(r.roomMe,r.roomSp), sp:solo(r.roomSp,r.roomMe), joint};
+  })();
+  const bestKey=Object.entries({me:best.me,sp:best.sp,joint:best.joint}).sort((x,y)=>y[1]-x[1])[0][0];
+  const nameOf={me:"본인 단독 차주",sp:"아내 단독 차주",joint:"부부 공동명의·공동차주"};
+  pn.push(["신용대출 총액이 가장 큰 구조",
+    `<b>${nameOf[bestKey]}</b> — 신용대출 합계 <b>${eok1(best[bestKey])}</b><br>`
+    +`본인 단독 ${eok1(best.me)} · 아내 단독 ${eok1(best.sp)} · 공동차주 ${eok1(best.joint)}<br>`
+    +`공동차주는 주담대의 DSR 부담이 두 사람에게 나뉘어, 단독 차주가 부딪히는 <b>연소득 이내 상한</b>을 우회합니다.`]);
+  pn.push(["실행 순서",
+    `<b>① 주담대 실행 → ② 등기 완료 → ③ 부족분 신용대출</b><br>`
+    +`신용대출을 먼저 받으면 규제지역 주택구입 제한 약정에 걸려 대출이 회수될 수 있습니다.`]);
+  const total1=r.corpAsCredit+r.creditMe;
+  pn.push(["1인당 신용대출 1억 한도",
+    (r.overMe||r.overSp
+      ? `<b>주의</b> — 한 명의 신용대출 합계가 1억을 넘습니다. 1억 초과 실행 시 <b>1년간 규제지역 주택구입이 차단</b>되고, 상환하거나 한도를 낮춰도 약정 효력은 1년간 유지됩니다.`
+      : `현재 설계는 본인 <b>${eok1(total1)}</b> · 아내 <b>${eok1(r.creditSp)}</b>로 각각 1억 이하입니다. 부부가 나눠 받아 규제를 피하는 구조입니다.`)]);
+  pn.push(["월 상환 부담",
+    `주담대 <b>${Math.round(r.mPay).toLocaleString()}만</b> + 신용대출 <b>${Math.round(r.cPay).toLocaleString()}만</b> = 월 <b>${Math.round(r.mPay+r.cPay).toLocaleString()}만</b><br>`
+    +`부부 세전 연소득 <b>${eok(r.incMe+r.incSp)}</b> 기준. 신용대출은 만기 5년이라 초반 부담이 큽니다.`]);
+  $("planNote").innerHTML=pn.map(([t,d])=>`<div class="note"><span class="tt">${t}</span>${d}</div>`).join("");
+
+  // 필요자금
+  $("need").innerHTML=`
+    <tr><td>마포태영 매수가</td><td>${eok1(r.buyP)}</td></tr>
+    <tr><td>취득세<span class="hint">1주택 · 전용 85㎡ 이하 · 9억 초과 3.3%</span></td><td>${man(r.acq)}</td></tr>
+    <tr><td>중개보수<span class="hint">매수 + 매도</span></td><td>${man(r.brk)}</td></tr>
+    <tr><td>법무 · 이사 · 기타</td><td>${man(r.etc)}</td></tr>
+    <tr class="sum"><td>필요 총액</td><td>${eok1(r.need)}</td></tr>`;
+
+  // 대안
+  const a=[];
+  if(r.short>0){
+    const b=149000;
+    const m2=Math.min(b*P.ltv,pv(r.room/12,r.rate+P.stress,r.term),60000);
+    const n2=b+acqTax(b)+broker(b)+broker(r.sellP)+300;
+    const t2=r.sellNet+m2+r.creditMe+r.creditSp+r.corpMore+r.cash;
+    a.push(["목표를 15억 이하로",`매수가 14.9억이면 절대한도가 <b>6억</b>으로 올라갑니다. 그래도 <b>${eok1(n2-t2)}</b> 부족합니다.`]);
+    a.push(["현금을 더 모은다",`부족액 <b>${eok1(r.short)}</b>. 월 300만씩이면 <b>${Math.ceil(r.short/300)}개월</b>(약 ${(r.short/300/12).toFixed(1)}년). 그 사이 가격도 움직입니다.`]);
+    let dtxt=`동반 60% 하락으로도 도달하지 못합니다. 현금 확보가 먼저입니다.`;
+    for(let d=1;d<=60;d++){
+      const s=r.sellP*(1-d/100),bb=r.buyP*(1-d/100);
+      const m=Math.min(bb*P.ltv,pv(r.room/12,r.rate+P.stress,r.term),P.caps.find(x=>bb<=x.u).c);
+      const nn=bb+acqTax(bb)+broker(bb)+broker(s)+300;
+      const tt=(s-r.mtgBal)+m+r.creditMe+r.creditSp+r.corpMore+r.cash;
+      if(nn-tt<=0){dtxt=`두 단지가 같은 비율로 <b>${d}% 동반 하락</b>하면 도달합니다. 그때 마포태영은 <b>${eok1(bb)}</b>.`;break;}
+    }
+    a.push(["동반 하락을 기다린다",dtxt]);
+    if(!r.jeonse)a.push(["전세 끼고 매수",`주담대 4억 대신 전세보증금을 레버리지로 씁니다. 전세가가 4억보다 크면 동원 자금이 늘어납니다. 대신 <b>바로 입주할 수 없습니다.</b>`]);
+  }else a.push(["실행 가능","현재 조건으로 자금이 맞습니다. 처분기한과 전입 의무 기한을 은행에서 확인하세요."]);
+  $("alts").innerHTML=a.map(([t,d])=>`<div class="note"><span class="tt">${t}</span>${d}</div>`).join("");
+}
+
+["incMe","incSp","corpBal","corpPay","mtgBal","cash","corpMore","sellP","buyP",
+ "rate","term","borrower","jeonseP","corpDsr","jeonse"].forEach(k=>{
+  $(k).addEventListener("input",render);$(k).addEventListener("change",render);});
+render();
+</script>
+</body>
+</html>

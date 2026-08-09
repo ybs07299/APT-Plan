@@ -1,0 +1,27 @@
+{
+  "_comment": "lawd_cd = 법정동코드 앞5자리. floor_min = 이 층수 미만 거래 제외(층 정보 없는 건도 제외).",
+  "months_back": 240,
+  "recent_refresh_months": 3,
+  "targets": [
+    {
+      "id": "current",
+      "label": "강나루현대 24평",
+      "lawd_cd": "11500",
+      "apt_keywords": ["강나루현대"],
+      "exclude_keywords": ["강나루2", "강나루 2"],
+      "area_min": 59.0,
+      "area_max": 60.5,
+      "floor_min": 4
+    },
+    {
+      "id": "target",
+      "label": "마포태영 34평",
+      "lawd_cd": "11440",
+      "apt_keywords": ["마포태영", "대흥태영"],
+      "exclude_keywords": ["데시앙"],
+      "area_min": 82.0,
+      "area_max": 86.0,
+      "floor_min": 4
+    }
+  ]
+}
