@@ -399,7 +399,13 @@ def collect_volume(service_key, cfg):
 
 # ---------------------------------------------------------------- main
 
+VERSION = "v3-local-2026.08"
+
+
 def main():
+    print("=" * 52)
+    print(f" collector {VERSION}")
+    print("=" * 52)
     key = os.environ.get("MOLIT_SERVICE_KEY", "").strip()
     if not key:
         sys.exit("MOLIT_SERVICE_KEY 환경변수가 없습니다. (포털의 '디코딩' 인증키)")
