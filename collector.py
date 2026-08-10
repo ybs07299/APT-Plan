@@ -25,6 +25,16 @@ import xml.etree.ElementTree as ET
 BASE_URL = ("http://apis.data.go.kr/1613000/RTMSDataSvcAptTradeDev"
             "/getRTMSDataSvcAptTradeDev")
 
+SEOUL = {
+    "11110": "종로구", "11140": "중구",   "11170": "용산구", "11200": "성동구",
+    "11215": "광진구", "11230": "동대문구", "11260": "중랑구", "11290": "성북구",
+    "11305": "강북구", "11320": "도봉구", "11350": "노원구", "11380": "은평구",
+    "11410": "서대문구", "11440": "마포구", "11470": "양천구", "11500": "강서구",
+    "11530": "구로구", "11545": "금천구", "11560": "영등포구", "11590": "동작구",
+    "11620": "관악구", "11650": "서초구", "11680": "강남구", "11710": "송파구",
+    "11740": "강동구",
+}
+
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "data"
 CONFIG_PATH = ROOT / "config.json"
@@ -66,7 +76,15 @@ def pick(d, *names):
 
 # ---------------------------------------------------------------- api call
 
-def fetch_month(service_key, lawd_cd, deal_ymd, num_rows=1000, retries=3):
+class AuthError(Exception):
+    """인증키 자체가 잘못됐거나 아직 승인 반영 전."""
+
+
+FAILED = []   # (lawd_cd, ym, 사유)
+
+
+def fetch_month(service_key, lawd_cd, deal_ymd, num_rows=1000, retries=5):
+    """성공하면 item 리스트, 실패하면 None(기록 후 계속 진행)."""
     params = {
         "serviceKey": service_key,
         "LAWD_CD": lawd_cd,
@@ -79,19 +97,57 @@ def fetch_month(service_key, lawd_cd, deal_ymd, num_rows=1000, retries=3):
     last_err = None
     for attempt in range(retries):
         try:
-            with urllib.request.urlopen(url, timeout=30) as resp:
+            with urllib.request.urlopen(url, timeout=90) as resp:
                 raw = resp.read()
+
+            text = raw.decode("utf-8", "ignore")
+            for token in ("SERVICE_KEY_IS_NOT_REGISTERED",
+                          "SERVICE ACCESS DENIED",
+                          "LIMITED_NUMBER_OF_SERVICE_REQUESTS"):
+                if token in text:
+                    raise AuthError(token)
+
             root = ET.fromstring(raw)
-            code = root.findtext(".//resultCode")
-            msg = root.findtext(".//resultMsg") or ""
-            if code not in (None, "00", "000"):
-                raise RuntimeError(f"API error {code}: {msg}")
+            code = (root.findtext(".//resultCode") or "").strip()
+            msg = (root.findtext(".//resultMsg") or "").strip()
+            if code and code not in ("00", "000"):
+                if code in ("30", "31", "32", "20", "22"):
+                    raise AuthError(f"{code} {msg}")
+                raise RuntimeError(f"API {code}: {msg}")
+
             return [{c.tag: (c.text or "").strip() for c in item}
                     for item in root.iter("item")]
+
+        except AuthError:
+            raise
         except Exception as e:                       # noqa: BLE001
             last_err = e
-            time.sleep(1.5 * (attempt + 1))
-    raise RuntimeError(f"{lawd_cd}/{deal_ymd} 수집 실패: {last_err}")
+            time.sleep(3.0 * (attempt + 1))
+
+    FAILED.append((lawd_cd, deal_ymd, str(last_err)[:80]))
+    return None
+
+
+def preflight(service_key):
+    """본격 수집 전에 키가 실제로 먹는지 1회 확인."""
+    print("인증키 확인 중...")
+    try:
+        rows = fetch_month(service_key, "11500", "202601", num_rows=5, retries=3)
+    except AuthError as e:
+        print("\n" + "=" * 60)
+        print("인증 실패:", e)
+        print("확인할 것")
+        print(" 1. 포털의 '일반 인증키(Decoding)'를 넣었는지  ← 가장 흔한 원인")
+        print("    Encoding 키를 넣으면 이중 인코딩되어 반드시 실패합니다.")
+        print(" 2. 활용신청이 '승인' 상태인지 (신청 직후면 10~30분 기다렸다 재시도)")
+        print(" 3. 신청한 데이터셋이 '아파트 매매 실거래가 상세 자료'가 맞는지")
+        print(" 4. 일일 트래픽(개발계정 10,000건)을 초과하지 않았는지")
+        print("=" * 60 + "\n")
+        sys.exit(1)
+    if rows is None:
+        print("경고: 시험 호출이 응답하지 않았습니다. 네트워크 일시 문제일 수 있어 계속 진행합니다.")
+    else:
+        print(f"인증키 정상 (시험 조회 {len(rows)}건)\n")
 
 
 # ---------------------------------------------------------------- normalize
@@ -161,10 +217,21 @@ def collect_target(service_key, target, months, refresh_months):
     recent = set(months[-refresh_months:])
     todo = [m for m in months if m in recent or m not in cached]
     print(f"[{target['id']}] 조회 {len(todo)}개월 (캐시 {len(cached)})")
+    fail_streak = 0
 
     samples = []
     for i, ym in enumerate(todo, 1):
-        for raw in fetch_month(service_key, target["lawd_cd"], ym):
+        rows = fetch_month(service_key, target["lawd_cd"], ym)
+        if rows is None:
+            fail_streak += 1
+            if fail_streak >= 20:
+                print(f"   !! {fail_streak}개월 연속 실패 — 네트워크가 불안정합니다.")
+                print("      지금까지 받은 만큼만 저장하고 이 단지는 중단합니다.")
+                print("      다시 실행하면 캐시된 달은 건너뛰고 이어서 받습니다.")
+                break
+            continue
+        fail_streak = 0
+        for raw in rows:
             rec = normalize(raw, target["lawd_cd"])
             if rec is None:
                 continue
@@ -254,12 +321,81 @@ def build_series(payloads, months):
     return out
 
 
+# ---------------------------------------------------------------- volume
+
+def collect_volume(service_key, cfg):
+    """자치구별 월별 아파트 매매 거래건수. 해제(취소) 거래는 제외."""
+    vcfg = cfg.get("volume") or {}
+    if not vcfg.get("enabled", True):
+        return None
+
+    months = month_range(vcfg.get("months_back", 120))
+    labels = [f"{m[:4]}-{m[4:]}" for m in months]
+    refresh = set(months[-cfg.get("recent_refresh_months", 3):])
+
+    focus = vcfg.get("focus", ["11500", "11440"])          # 강서구, 마포구
+    codes = list(SEOUL.keys()) if vcfg.get("all_seoul", True) else list(focus)
+
+    cache_path = DATA_DIR / "volume.json"
+    cache = {}
+    if cache_path.exists():
+        prev = json.loads(cache_path.read_text(encoding="utf-8"))
+        cache = prev.get("_raw", {})
+
+    total_calls = 0
+    for ci, code in enumerate(codes, 1):
+        cache.setdefault(code, {})
+        todo = [m for m in months if m in refresh or m not in cache[code]]
+        if not todo:
+            continue
+        print(f"[volume] {SEOUL.get(code, code)} {len(todo)}개월")
+        for ym in todo:
+            rows = fetch_month(service_key, code, ym)
+            if rows is None:
+                continue
+            n = 0
+            for raw in rows:
+                rec = normalize(raw, code)
+                if rec and not rec["canceled"]:
+                    n += 1
+            cache[code][ym] = n
+            total_calls += 1
+            time.sleep(0.12)
+        if ci % 5 == 0:
+            print(f"   ... {ci}/{len(codes)}개 자치구, 누적 {total_calls}건 호출")
+
+    regions, seoul = {}, [0] * len(months)
+    for code in codes:
+        counts = [cache.get(code, {}).get(m) for m in months]
+        regions[code] = {"name": SEOUL.get(code, code), "counts": counts,
+                         "focus": code in focus}
+        for i, c in enumerate(counts):
+            if c:
+                seoul[i] += c
+
+    out = {
+        "months": labels,
+        "regions": regions,
+        "seoul": {"name": "서울 전체", "counts": seoul},
+        "focus": focus,
+        "all_seoul": vcfg.get("all_seoul", True),
+        "updated_at": date.today().isoformat(),
+        "_raw": cache,
+    }
+    DATA_DIR.mkdir(exist_ok=True)
+    cache_path.write_text(json.dumps(out, ensure_ascii=False), encoding="utf-8")
+    print(f"[volume] 완료 — {len(codes)}개 자치구 / {len(months)}개월")
+    return out
+
+
 # ---------------------------------------------------------------- main
 
 def main():
     key = os.environ.get("MOLIT_SERVICE_KEY", "").strip()
     if not key:
         sys.exit("MOLIT_SERVICE_KEY 환경변수가 없습니다. (포털의 '디코딩' 인증키)")
+
+    preflight(key)
 
     cfg = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
     months = month_range(cfg.get("months_back", 240))
@@ -271,6 +407,8 @@ def main():
     (DATA_DIR / "series.json").write_text(
         json.dumps(build_series(payloads, months), ensure_ascii=False),
         encoding="utf-8")
+    collect_volume(key, cfg)
+
     (DATA_DIR / "summary.json").write_text(
         json.dumps({
             "updated_at": date.today().isoformat(),
@@ -278,7 +416,12 @@ def main():
                          "count": p["count"], "latest": p["latest"]}
                         for p in payloads]
         }, ensure_ascii=False, indent=1), encoding="utf-8")
-    print("완료")
+    DATA_DIR.mkdir(exist_ok=True)
+    if FAILED:
+        print(f"\n일부 월 수집 실패 {len(FAILED)}건 (나머지는 정상 저장됨)")
+        for f in FAILED[:5]:
+            print("  ", f)
+    print("\n완료")
 
 
 if __name__ == "__main__":
