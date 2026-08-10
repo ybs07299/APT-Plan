@@ -1,0 +1,17 @@
+{
+ "updated_at": "2026-08-10",
+ "targets": [
+  {
+   "id": "current",
+   "label": "강나루현대 24평",
+   "count": 0,
+   "latest": null
+  },
+  {
+   "id": "target",
+   "label": "마포태영 34평",
+   "count": 0,
+   "latest": null
+  }
+ ]
+}
